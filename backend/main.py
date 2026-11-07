@@ -87,17 +87,26 @@ async def require_ingest_key(authorization: str | None = Header(default=None)) -
         raise HTTPException(status_code=401, detail="Invalid intake credentials.")
 
 
+async def require_dashboard_key(authorization: str | None = Header(default=None)) -> None:
+    expected = os.getenv("DASHBOARD_API_KEY", "")
+    if not expected:
+        raise HTTPException(status_code=503, detail="Dashboard access is not configured.")
+    supplied = authorization.removeprefix("Bearer ") if authorization else ""
+    if not hmac.compare_digest(supplied, expected):
+        raise HTTPException(status_code=401, detail="Invalid dashboard credentials.")
+
+
 @app.get("/api/health")
 async def health() -> dict:
     return {"ready": True, "service": "aegis-em-realtime-intake", "checked_at": datetime.now(timezone.utc).isoformat()}
 
 
-@app.get("/api/incidents")
+@app.get("/api/incidents", dependencies=[Depends(require_dashboard_key)])
 async def incident_snapshot() -> dict:
     return {"incidents": incidents[-100:], "count": len(incidents)}
 
 
-@app.get("/api/events")
+@app.get("/api/events", dependencies=[Depends(require_dashboard_key)])
 async def events(request: Request) -> StreamingResponse:
     queue: asyncio.Queue[str] = asyncio.Queue(maxsize=32)
     listeners.add(queue)
