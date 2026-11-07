@@ -58,12 +58,10 @@ function startRealtime() {
   document.querySelector("#wall-clock").textContent = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
   setInterval(() => { document.querySelector("#wall-clock").textContent = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }); }, 15000);
   if (API_BASE) {
-    const stream = new EventSource(`${API_BASE}/api/events`);
-    stream.onopen = () => { status.innerHTML = "<i></i> LIVE FEED CONNECTED"; };
-    stream.onerror = () => { status.innerHTML = "<i></i> RECONNECTING"; };
-    stream.addEventListener("incident", (event) => {
-      try { acceptRealtimeIncident(JSON.parse(event.data)); } catch { showToast("Received an unreadable incident event."); }
-    });
+    let token = sessionStorage.getItem("aegis.dashboardToken") || window.prompt("Enter the authorized dashboard feed token:");
+    if (!token) { status.innerHTML = "<i></i> FEED AUTH REQUIRED"; return; }
+    sessionStorage.setItem("aegis.dashboardToken", token);
+    connectAuthenticatedFeed(token, status);
     return;
   }
   status.title = "Browser-only generated sample incidents; connect a backend for external feeds.";
@@ -77,6 +75,43 @@ function startRealtime() {
     const sample = simulationCases[(sequence - 2050) % simulationCases.length];
     acceptRealtimeIncident({ ...sample, id: `SIM-${sequence++}` });
   }, 45000);
+}
+
+async function connectAuthenticatedFeed(initialToken, status) {
+  let token = initialToken;
+  while (true) {
+    try {
+      const response = await fetch(`${API_BASE}/api/events`, { headers: { Authorization: `Bearer ${token}` } });
+      if (response.status === 401 || response.status === 503) {
+        sessionStorage.removeItem("aegis.dashboardToken");
+        token = window.prompt("Dashboard token was rejected. Enter the authorized feed token:");
+        if (!token) { status.innerHTML = "<i></i> FEED AUTH REQUIRED"; return; }
+        sessionStorage.setItem("aegis.dashboardToken", token);
+        continue;
+      }
+      if (!response.ok || !response.body) throw new Error(`Feed returned ${response.status}`);
+      status.innerHTML = "<i></i> LIVE FEED CONNECTED";
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const blocks = buffer.split("\n\n");
+        buffer = blocks.pop() || "";
+        for (const block of blocks) {
+          const eventName = block.match(/^event:\s*(.+)$/m)?.[1];
+          const data = block.match(/^data:\s*(.+)$/m)?.[1];
+          if (eventName === "incident" && data) acceptRealtimeIncident(JSON.parse(data));
+        }
+      }
+      status.innerHTML = "<i></i> RECONNECTING";
+    } catch {
+      status.innerHTML = "<i></i> RECONNECTING";
+    }
+    await new Promise((resolve) => setTimeout(resolve, 3000));
+  }
 }
 
 document.querySelector("#new-incident").addEventListener("click", runDemo);
