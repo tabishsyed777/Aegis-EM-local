@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#09111a" />
+    <meta name="description" content="Aegis emergency response command center demo." />
+    <title>Aegis EM — Incident command</title>
+    <link rel="stylesheet" href="styles.css" />
+    <script src="app.js" defer></script>
+  </head>
+  <body>
+    <aside class="sidebar">
+      <a class="brand" href="#overview"><span class="brand-mark">A</span><span>AEGIS<small>EM COMMAND</small></span></a>
+      <div class="side-label">WORKSPACE</div>
+      <nav aria-label="Main navigation">
+        <a class="nav-item active" href="#overview"><span>⌂</span> Overview <kbd>01</kbd></a>
+        <a class="nav-item" href="#incident"><span>◉</span> Incidents <b class="nav-count">3</b></a>
+        <a class="nav-item" href="#agents"><span>✳</span> Agent activity</a>
+        <a class="nav-item" href="#fleet"><span>▦</span> Response fleet</a>
+      </nav>
+      <div class="sidebar-bottom"><div class="connection"><i></i><span>Demo environment<strong>All systems ready</strong></span></div><div class="profile"><div class="avatar">TS</div><span>Tabish Syed<small>Incident commander</small></span><span class="more">···</span></div></div>
+    </aside>
+
+    <main id="overview">
+      <header class="topbar"><div class="breadcrumb">Operations <span>/</span> Command center</div><div class="top-actions"><span class="clock"><i></i> SIMULATION MODE</span><button class="icon-button" aria-label="Notifications">♧<b></b></button><button class="commander-button"><span class="avatar small">TS</span> Commander</button></div></header>
+      <section class="page-heading"><div><p class="eyebrow">SATURDAY, 07 NOVEMBER 2026 <span>·</span> MUMBAI REGION</p><h1>Good morning, Commander.</h1><p class="subheading">Here’s your operational picture right now.</p></div><button id="new-incident" class="primary-button"><span>＋</span> Run demo incident</button></section>
+
+      <section class="metrics" aria-label="Operational metrics">
+        <article class="metric"><div class="metric-top"><span>Open incidents</span><span class="metric-icon red">◉</span></div><strong id="metric-incidents">03</strong><small><i class="red-text"></i> 1 needs commander review</small></article>
+        <article class="metric"><div class="metric-top"><span>Units available</span><span class="metric-icon blue">▦</span></div><strong>18<span class="out-of"> / 24</span></strong><small><i class="green-text"></i> Fleet readiness 75%</small></article>
+        <article class="metric"><div class="metric-top"><span>Median response ETA</span><span class="metric-icon amber">◷</span></div><strong>06<span class="unit"> min</span></strong><small><i class="green-text"></i> 2 min faster than average</small></article>
+        <article class="metric"><div class="metric-top"><span>Agent checks today</span><span class="metric-icon violet">✳</span></div><strong id="metric-checks">24</strong><small><i class="green-text"></i> Demo simulation data</small></article>
+      </section>
+
+      <section class="main-grid">
+        <article class="panel map-panel" id="incident">
+          <div class="panel-heading"><div><h2>Incident overview</h2><p>Live operational map <span class="live-pill"><i></i> LIVE</span></p></div><button class="more-button" aria-label="More map options">···</button></div>
+          <div class="map-wrap">
+            <div class="map-grid"></div>
+            <svg class="map-lines" viewBox="0 0 760 390" preserveAspectRatio="none" aria-hidden="true"><path d="M-20 88 C105 118 155 34 270 70 S420 140 520 87 650 48 790 80"/><path d="M-30 244 C80 195 130 272 235 224 S400 192 500 250 650 301 790 242"/><path d="M113 -15 C138 87 95 135 140 206 S190 302 155 410"/><path d="M405 -20 C360 61 428 124 391 193 S362 304 420 410"/><path d="M630 -30 C568 78 650 130 598 221 S590 320 650 410"/><path class="water" d="M-12 331 Q93 300 161 340 T302 329 T442 340 T590 330 T770 346"/></svg>
+            <span class="map-label label-one">BANDRA WEST</span><span class="map-label label-two">MAHIM</span><span class="map-label label-three">DADAR</span><span class="map-label label-four">SION</span><span class="map-label label-five">ARABIAN SEA</span>
+            <div class="incident-marker" id="map-marker"><div class="pulse"></div><span>!</span></div><div class="map-tooltip" id="map-tooltip"><b id="map-title">Hazmat incident</b><span id="map-location">Bandra–Worli Sea Link · P1</span></div>
+            <div class="unit-marker unit-a">✚</div><div class="unit-marker unit-b">✚</div><div class="unit-marker unit-c">◆</div>
+            <div class="map-legend"><span><i class="legend-red"></i> Incident</span><span><i class="legend-blue"></i> Medical</span><span><i class="legend-gold"></i> Rescue</span></div><button class="map-expand" aria-label="Expand map">⛶</button>
+          </div>
+          <div class="map-footer"><span><i class="green-text">●</i> 3 active units tracking</span><span>Map data simulated <b>↗</b></span></div>
+        </article>
+
+        <article class="panel incident-panel"><div class="panel-heading"><div><h2>Priority incidents</h2><p>Sorted by severity <span class="count-pill" id="incident-count">03</span></p></div><button class="text-button" id="view-all">View all <span>→</span></button></div>
+          <div id="incident-list" class="incident-list"></div>
+        </article>
+
+        <article class="panel agents-panel" id="agents"><div class="panel-heading"><div><h2>Agent response flow</h2><p>Latest run <span class="run-time" id="run-time">· 2 min ago</span></p></div><span class="flow-status" id="flow-status"><i></i> COMPLETED</span></div>
+          <div class="agent-flow" id="agent-flow"><div class="flow-line"></div>
+            <div class="agent-step done"><span class="agent-icon">⌕</span><div><b>Triage & intake</b><small>Incident classified · 98% confidence</small></div><span class="step-check">✓</span></div>
+            <div class="agent-step done"><span class="agent-icon">⌖</span><div><b>Hazard verification</b><small>GIS cross-check complete</small></div><span class="step-check">✓</span></div>
+            <div class="agent-step done"><span class="agent-icon">▦</span><div><b>Resource logistics</b><small>3 response units recommended</small></div><span class="step-check">✓</span></div>
+            <div class="agent-step review"><span class="agent-icon">⌁</span><div><b>Commander briefing</b><small>Awaiting your approval</small></div><span class="review-tag">REVIEW</span></div>
+          </div>
+          <div class="approval-box" id="approval-box"><div class="approval-symbol">!</div><div><b>Action requires approval</b><p>Public safety alert for the Bandra–Worli corridor.</p></div><button id="approve-button" class="approve-button">Review & approve <span>→</span></button></div>
+        </article>
+
+        <article class="panel fleet-panel" id="fleet"><div class="panel-heading"><div><h2>Response fleet</h2><p>Assigned to active incidents</p></div><button class="text-button" id="fleet-toggle">All units <span>⌄</span></button></div>
+          <div class="fleet-table"><div class="fleet-row fleet-head"><span>UNIT / TYPE</span><span>ASSIGNMENT</span><span>STATUS</span><span>ETA</span></div>
+            <div class="fleet-row"><span class="unit-name"><i class="fleet-icon ambulance">✚</i><b>AMB-04</b><small>Advanced life support</small></span><span><b>Hazmat incident</b><small>Bandra–Worli Sea Link</small></span><span><i class="status-dot enroute"></i> En route</span><strong>04 min</strong></div>
+            <div class="fleet-row"><span class="unit-name"><i class="fleet-icon rescue">◆</i><b>RES-12</b><small>Hazmat response</small></span><span><b>Hazmat incident</b><small>Bandra–Worli Sea Link</small></span><span><i class="status-dot enroute"></i> En route</span><strong>07 min</strong></div>
+            <div class="fleet-row"><span class="unit-name"><i class="fleet-icon fire">▲</i><b>FIR-08</b><small>Fire & rescue</small></span><span><b>Structure fire</b><small>Lower Parel</small></span><span><i class="status-dot onscene"></i> On scene</span><strong>—</strong></div>
+          </div>
+        </article>
+      </section>
+
+      <footer><span><b>AEGIS EM</b> <i></i> DEMO COMMAND CENTER</span><span>Simulation only · No real emergency services are contacted</span><a href="README.md">About this demo ↗</a></footer>
+    </main>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    <dialog id="approval-dialog"><form method="dialog"><button class="dialog-close" aria-label="Close">×</button><div class="dialog-symbol">!</div><p class="eyebrow">COMMANDER REVIEW · P1</p><h2>Approve public safety alert?</h2><p class="dialog-copy">This demo action marks the alert as approved in the interface. It does not contact residents or emergency services.</p><div class="alert-preview"><b>PROPOSED PUBLIC ALERT</b><p>Hazmat incident reported near Bandra–Worli Sea Link. Avoid the corridor and follow directions from responders.</p></div><div class="dialog-actions"><button class="secondary-button" value="cancel">Go back</button><button class="primary-button" id="confirm-approval" value="approve">Approve in demo <span>→</span></button></div></form></dialog>
+  </body>
+</html>
