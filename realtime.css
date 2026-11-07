@@ -1,0 +1,2 @@
+.wall-clock{color:#8698a8;font:9px 'DM Mono',monospace;min-width:36px}
+@media(max-width:520px){.wall-clock{display:none}}
