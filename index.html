@@ -7,6 +7,8 @@
     <meta name="description" content="Aegis emergency response command center demo." />
     <title>Aegis EM — Incident command</title>
     <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="realtime.css" />
+    <script src="api-config.js"></script>
     <script src="app.js" defer></script>
   </head>
   <body>
@@ -23,7 +25,7 @@
     </aside>
 
     <main id="overview">
-      <header class="topbar"><div class="breadcrumb">Operations <span>/</span> Command center</div><div class="top-actions"><span class="clock"><i></i> SIMULATION MODE</span><button class="icon-button" aria-label="Notifications">♧<b></b></button><button class="commander-button"><span class="avatar small">TS</span> Commander</button></div></header>
+      <header class="topbar"><div class="breadcrumb">Operations <span>/</span> Command center</div><div class="top-actions"><span class="clock" id="connection-status"><i></i> LIVE SIMULATION</span><span class="wall-clock" id="wall-clock"></span><button class="icon-button" aria-label="Notifications">♧<b></b></button><button class="commander-button"><span class="avatar small">TS</span> Commander</button></div></header>
       <section class="page-heading"><div><p class="eyebrow">SATURDAY, 07 NOVEMBER 2026 <span>·</span> MUMBAI REGION</p><h1>Good morning, Commander.</h1><p class="subheading">Here’s your operational picture right now.</p></div><button id="new-incident" class="primary-button"><span>＋</span> Run demo incident</button></section>
 
       <section class="metrics" aria-label="Operational metrics">
