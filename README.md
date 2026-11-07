@@ -14,11 +14,12 @@ python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 export INGEST_API_KEY='replace-with-a-long-random-secret'
+export DASHBOARD_API_KEY='use-a-separate-long-random-secret'
 export ALLOWED_ORIGINS='http://localhost:8000,https://tabishsyed777.github.io'
 uvicorn main:app --reload --port 8000
 ```
 
-The API provides `GET /api/health`, `GET /api/incidents`, and `GET /api/events` (Server-Sent Events). A configured upstream source can submit authorized incident records to `POST /api/incidents` with `Authorization: Bearer <INGEST_API_KEY>`.
+The API provides `GET /api/health`, `GET /api/incidents`, and `GET /api/events` (Server-Sent Events). The dashboard endpoints require `Authorization: Bearer <DASHBOARD_API_KEY>`; the page asks for this token when an API URL is configured and keeps it in session storage for that browser tab. A configured upstream source can submit authorized incident records to `POST /api/incidents` with `Authorization: Bearer <INGEST_API_KEY>`.
 
 Example payload:
 
@@ -38,6 +39,6 @@ The API keeps recent events in memory, so a restart clears them. For a public pr
 
 ## Connect the hosted dashboard
 
-Deploy the `backend` folder as an ASGI service that runs `uvicorn main:app --host 0.0.0.0 --port $PORT`. Set `INGEST_API_KEY` and `ALLOWED_ORIGINS` on that backend. Then set `apiBase` in `api-config.js` to the backend's HTTPS base URL and push the change; GitHub Pages will redeploy automatically.
+Deploy the `backend` folder as an ASGI service that runs `uvicorn main:app --host 0.0.0.0 --port $PORT`. Set `INGEST_API_KEY`, `DASHBOARD_API_KEY`, and `ALLOWED_ORIGINS` on that backend. Then set `apiBase` in `api-config.js` to the backend's HTTPS base URL and push the change; GitHub Pages will redeploy automatically.
 
-GitHub Pages only hosts the static dashboard; the backend must run on a separate service. Until the backend URL and an authorized incident feed are configured, the hosted page remains in simulation mode. The commander approval control is a demo only and never dispatches units or sends public alerts.
+GitHub Pages only hosts the static dashboard; the backend must run on a separate service. Until the backend URL and an authorized incident feed are configured, the hosted page remains in simulation mode. The API is a prototype with in-memory storage; it is not an operational emergency system. The commander approval control is a demo only and never dispatches units or sends public alerts.
