@@ -1,21 +1,43 @@
 # Aegis-EM Command Center
 
-A polished, interactive emergency response command-center demo. It shows a multi-agent incident workflow, a schematic Mumbai map, a simulated response fleet, and a commander approval step for a public safety alert.
+A real-time incident dashboard prototype with two modes: an always-available browser simulation and an optional API stream for incidents from a data source you are authorized to use.
 
-## Run locally
+## Current GitHub Pages demo
 
-Open `index.html` in a modern browser. No install, account, API key, or server is required.
+Open the [live demo](https://tabishsyed777.github.io/Aegis-EM-local/). It runs a browser-only simulation and adds sample events while the page is open. The **Run demo incident** button animates the response flow. No actual emergency reports, AI model, GIS feed, dispatch system, or alert service is connected.
 
-## Try the demo
+## Run the realtime API locally
 
-1. Select an incident to move the map marker and inspect its priority.
-2. Click **Run demo incident** to animate triage, hazard verification, and logistics, then add a simulated collision to the incident list.
-3. Click **Review & approve** to open the commander gate. Approval changes the demo state in the page only.
+```sh
+cd backend
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+export INGEST_API_KEY='replace-with-a-long-random-secret'
+export ALLOWED_ORIGINS='http://localhost:8000,https://tabishsyed777.github.io'
+uvicorn main:app --reload --port 8000
+```
 
-## GitHub Pages
+The API provides `GET /api/health`, `GET /api/incidents`, and `GET /api/events` (Server-Sent Events). A configured upstream source can submit authorized incident records to `POST /api/incidents` with `Authorization: Bearer <INGEST_API_KEY>`.
 
-The included GitHub Actions workflow deploys this static site to GitHub Pages whenever changes are pushed to `main`. In the repository settings, set **Pages → Build and deployment → Source** to **GitHub Actions** if it is not already selected. Once the first deployment succeeds, open the Pages URL shown in the repository's **Settings → Pages**.
+Example payload:
 
-## Scope
+```json
+{
+  "source_id": "source-record-123",
+  "title": "Road obstruction reported",
+  "category": "Traffic obstruction",
+  "severity": "P3",
+  "location": "Mumbai, India",
+  "summary": "Lane blocked by debris",
+  "source": "your-authorized-feed"
+}
+```
 
-This is a front-end simulation. The agent steps use scripted demo data; they do not call an AI model, GIS feed, fleet database, emergency service, or public alert system. The map is schematic, unit positions and ETAs are illustrative, and the approval control never sends an alert.
+The API keeps recent events in memory, so a restart clears them. For a public production service, add persistent storage, request signing or OAuth, rate limiting, audit logging, monitoring, and a vetted feed adapter before handling operational data.
+
+## Connect the hosted dashboard
+
+Deploy the `backend` folder as an ASGI service that runs `uvicorn main:app --host 0.0.0.0 --port $PORT`. Set `INGEST_API_KEY` and `ALLOWED_ORIGINS` on that backend. Then set `apiBase` in `api-config.js` to the backend's HTTPS base URL and push the change; GitHub Pages will redeploy automatically.
+
+GitHub Pages only hosts the static dashboard; the backend must run on a separate service. Until the backend URL and an authorized incident feed are configured, the hosted page remains in simulation mode. The commander approval control is a demo only and never dispatches units or sends public alerts.
