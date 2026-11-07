@@ -6,6 +6,7 @@ const incidents = [
 const list = document.querySelector("#incident-list");
 const toast = document.querySelector("#toast");
 const dialog = document.querySelector("#approval-dialog");
+const API_BASE = String(window.AEGIS_CONFIG?.apiBase || "").replace(/\/$/, "");
 let toastTimer;
 
 function renderIncidents() {
@@ -34,12 +35,57 @@ function focusIncident(item) {
   showToast(`${item.id} selected on the demo map`);
 }
 
+function acceptRealtimeIncident(item) {
+  if (!item || !item.id) return;
+  const existing = incidents.findIndex((incident) => incident.id === item.id);
+  const normalized = {
+    id: String(item.id), title: String(item.title || "Incoming incident"),
+    location: String(item.location || "Location pending verification"),
+    level: String(item.severity || "P3"), kind: ["P1", "P2", "P3"].includes(String(item.severity).toUpperCase()) ? String(item.severity).toLowerCase() : "p3",
+    time: item.time || new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: false }),
+    units: item.units || "Awaiting commander review", description: item.category || "New incident",
+    x: item.mapX || `${30 + Math.floor(Math.random() * 40)}%`, y: item.mapY || `${30 + Math.floor(Math.random() * 40)}%`,
+  };
+  if (existing >= 0) incidents.splice(existing, 1, normalized);
+  else incidents.unshift(normalized);
+  renderIncidents();
+  document.querySelector("#run-time").textContent = "· just now";
+  showToast(`New ${normalized.level} incident received: ${normalized.title}`);
+}
+
+function startRealtime() {
+  const status = document.querySelector("#connection-status");
+  document.querySelector("#wall-clock").textContent = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  setInterval(() => { document.querySelector("#wall-clock").textContent = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }); }, 15000);
+  if (API_BASE) {
+    const stream = new EventSource(`${API_BASE}/api/events`);
+    stream.onopen = () => { status.innerHTML = "<i></i> LIVE FEED CONNECTED"; };
+    stream.onerror = () => { status.innerHTML = "<i></i> RECONNECTING"; };
+    stream.addEventListener("incident", (event) => {
+      try { acceptRealtimeIncident(JSON.parse(event.data)); } catch { showToast("Received an unreadable incident event."); }
+    });
+    return;
+  }
+  status.title = "Browser-only generated sample incidents; connect a backend for external feeds.";
+  const simulationCases = [
+    { title: "Road obstruction reported", location: "Eastern Express Highway", category: "Traffic obstruction", severity: "P3" },
+    { title: "Localized waterlogging", location: "Kurla West · Ward 169", category: "Flood monitoring", severity: "P3" },
+    { title: "Power line hazard reported", location: "Matunga East · Ward 186", category: "Electrical hazard", severity: "P2" },
+  ];
+  let sequence = 2050;
+  setInterval(() => {
+    const sample = simulationCases[(sequence - 2050) % simulationCases.length];
+    acceptRealtimeIncident({ ...sample, id: `SIM-${sequence++}` });
+  }, 45000);
+}
+
 document.querySelector("#new-incident").addEventListener("click", runDemo);
 function runDemo() {
   const button = document.querySelector("#new-incident");
   if (button.disabled) return;
   button.disabled = true;
   button.innerHTML = '<span>◌</span> Running agents…';
+  if (API_BASE) fetch(`${API_BASE}/api/demo/run`, { method: "POST" }).catch(() => showToast("Demo backend is not reachable; showing the local simulation."));
   const flow = document.querySelector("#agent-flow");
   const status = document.querySelector("#flow-status");
   const steps = [...flow.querySelectorAll(".agent-step")];
@@ -61,10 +107,12 @@ function runDemo() {
 }
 
 function finishDemo(button, steps, status) {
-  const alreadyAdded = incidents.some((item) => item.id === "INC-2049");
-  if (!alreadyAdded) incidents.unshift({ id: "INC-2049", title: "Multi-vehicle collision", location: "Western Express Highway · Andheri", level: "P1", kind: "p1", time: "09:48", units: "2 units recommended", description: "Traffic collision", x: "33%", y: "56%" });
-  renderIncidents();
-  focusIncident(incidents[0]);
+  if (!API_BASE) {
+    const alreadyAdded = incidents.some((item) => item.id === "INC-2049");
+    if (!alreadyAdded) incidents.unshift({ id: "INC-2049", title: "Multi-vehicle collision", location: "Western Express Highway · Andheri", level: "P1", kind: "p1", time: "09:48", units: "2 units recommended", description: "Traffic collision", x: "33%", y: "56%" });
+    renderIncidents();
+    focusIncident(incidents[0]);
+  }
   document.querySelector("#metric-checks").textContent = "25";
   document.querySelector("#run-time").textContent = "· just now";
   steps[3].classList.add("review");
@@ -108,3 +156,4 @@ function escapeHtml(value) {
   return String(value).replace(/[&<>"']/g, (character) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;" })[character]);
 }
 renderIncidents();
+startRealtime();
